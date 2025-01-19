@@ -1,0 +1,5 @@
+flask
+flask-socketio
+p115client
+requests
+schedule

@@ -1,0 +1,48 @@
+{
+    "tasks": [
+      {
+        "uuid": "c32d5dff-e3f7-4fbb-bc3b-4c4937a9f437",
+        "name": "Sample Task",
+        "enable": true,
+        "source_path": "/path/to/source",
+        "target_path": "/path/to/target",
+        "rules": [
+          {
+            "name": "Video Files",
+            "extensions": ".mp4;.mkv;.avi",
+            "method": "copy"
+          },
+          {
+            "name": "Subtitle Files",
+            "extensions": ".srt;.ass",
+            "method": "symlink"
+          }
+        ],
+        "enable_watch": true,
+        "enable_sync": {
+          "enabled": true,
+          "schedule": "0 12 * * *"
+        }
+      },
+      {
+        "uuid": "12345678-abcd-1234-abcd-123456789abc",
+        "name": "Task 2",
+        "enable": false,
+        "source_path": "/path/to/another/source",
+        "target_path": "/path/to/another/target",
+        "rules": [
+          {
+            "name": "Document Files",
+            "extensions": ".pdf;.txt;.docx",
+            "method": "copy"
+          }
+        ],
+        "enable_watch": false,
+        "enable_sync": {
+          "enabled": true,
+          "schedule": "30 18 * * *"
+        }
+      }
+    ]
+  }
+  

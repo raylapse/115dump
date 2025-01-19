@@ -1,0 +1,23 @@
+{
+    "mount_path": "/volume1/cloud/115",
+    "strm_prefix": "smb://192.168.1.71/H/MediaLibrary/",
+    "default_task_rules_template": {
+      "rules": [
+        {
+          "name": "Video Files",
+          "extensions": ".mp4;.mkv;.avi",
+          "method": "copy"
+        },
+        {
+          "name": "Subtitle Files",
+          "extensions": ".srt;.ass",
+          "method": "symlink"
+        }
+      ]
+    },
+    "logging": {
+      "level": "info",
+      "retention_days": 30
+    }
+  }
+  
