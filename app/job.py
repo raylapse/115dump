@@ -2,22 +2,23 @@ import conn
 import tree
 import dump
 import task
+import json
 from datetime import datetime
-from task import Task
 import threading
 import logging
-from utils import SocketIOHandler
+from app.util import SocketIOHandler
+import os
 
 class Job:
-    def __init__(self, name, task):
+    def __init__(self, task):
         """
         初始化 Job 实例
         
-        :param name: 任务名称
         :param task: 任务实例（Task 类实例），包含任务配置和规则
         """
-        self.name = name
         self.task = task  # 传入的 Task 类实例，包含任务的配置和规则
+        self.timestamp = datetime.now().strftime('%Y%m%d%H%M%S')  # 生成时间戳
+        self.name = f"{self.task.get_name()}_{self.timestamp}"  # 使用 task name 和时间戳来生成 Job 名称
         self.status = 'pending'  # 任务的初始状态
         self.logs = []  # 日志记录
         self.conn = conn.Conn()  # 初始化连接实例
@@ -27,20 +28,20 @@ class Job:
         self.end_time = None  # 任务结束时间
         self.lock = threading.Lock()  # 创建一个锁对象，用于线程同步
         self.logger = self._setup_logger()  # 初始化 logger
+        self.job_data = self._load_job_data()  # 载入已有的 job 数据
 
     def _setup_logger(self):
         """为每个 Job 设置独立的日志文件，并同时发送到 WebSocket"""
-        logger = logging.getLogger(self.task_name)
-        timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
-        log_filename = f"{self.task_name}_{timestamp}.log"
+        logger = logging.getLogger(self.name)
+        log_filename = f"logs/{self.name}.log"  # 使用 job name 作为日志文件名
         
         # 日志文件处理器
-        file_handler = logging.FileHandler(f'logs/{log_filename}')
+        file_handler = logging.FileHandler(log_filename)
         formatter = logging.Formatter('%(asctime)s - %(message)s')
         file_handler.setFormatter(formatter)
         
         # SocketIO 处理器
-        socketio_handler = SocketIOHandler(self.socketio, self.task_name)
+        socketio_handler = SocketIOHandler(self.socketio, self.name)
         socketio_handler.setFormatter(formatter)
         
         logger.addHandler(file_handler)  # 将日志记录到文件
@@ -48,6 +49,21 @@ class Job:
         logger.setLevel(logging.INFO)
         return logger
     
+    def _load_job_data(self):
+        """加载 job.json 文件，获取已有的任务数据"""
+        job_file_path = 'cache/job.json'
+        if os.path.exists(job_file_path):
+            with open(job_file_path, 'r') as f:
+                return json.load(f)
+        else:
+            return {"jobs": []}
+
+    def _save_job_data(self):
+        """保存 job 数据到 job.json 文件"""
+        job_file_path = 'cache/job.json'
+        with open(job_file_path, 'w') as f:
+            json.dump(self.job_data, f, indent=4)
+
     def start(self):
         """
         启动任务
@@ -59,6 +75,16 @@ class Job:
         self.status = 'running'  # 设置任务状态为运行中
         self.logs.append(f"Job {self.name} started at {self.start_time}.")
         
+        # 记录任务开始信息到 job.json
+        job_info = {
+            "name": self.name,
+            "status": "running",
+            "start_time": self.start_time.isoformat(),
+            "result": {"success": 0, "failed": 0, "cleaned": 0}
+        }
+        self.job_data['jobs'].append(job_info)
+        self._save_job_data()  # 保存到 job.json
+
         try:
             # 获取 client
             client = self.conn.get_client()
@@ -83,10 +109,26 @@ class Job:
         self.status = 'completed'  # 设置任务状态为已完成
         self.logs.append(f"Job {self.name} completed at {self.end_time}. Duration: {self.end_time - self.start_time}")
 
+        # 更新 job.json 中的任务信息
+        for job in self.job_data['jobs']:
+            if job['name'] == self.name:
+                job['status'] = 'completed'
+                job['end_time'] = self.end_time.isoformat()
+                job['result'] = {"success": 120, "failed": 5, "cleaned": 8}  # 假设的结果
+        self._save_job_data()  # 保存更新后的任务数据
+
     def fail(self, reason):
         """任务失败时的处理"""
         self.status = 'failed'  # 设置任务状态为失败
         self.logs.append(f"Job {self.name} failed: {reason}")
+
+        # 更新 job.json 中的任务信息
+        for job in self.job_data['jobs']:
+            if job['name'] == self.name:
+                job['status'] = 'failed'
+                job['end_time'] = datetime.now().isoformat()
+                job['result'] = {"success": 0, "failed": 0, "cleaned": 0}  # 假设的结果
+        self._save_job_data()  # 保存更新后的任务数据
 
     def update_logs(self, message):
         """更新日志"""
@@ -95,21 +137,3 @@ class Job:
     def get_logs(self):
         """获取日志"""
         return '\n'.join(self.logs)
-
-    def schedule(self):
-        """定时调度任务（例如使用 Cron 表达式）"""
-        # 你可以在此方法中使用像 `schedule` 或 `APScheduler` 之类的库来设置定时任务
-        pass
-
-
-# 示例用法
-if __name__ == "__main__":
-    # 假设 Task 类实例已经被创建，task 是一个实例化后的 Task 对象
-    task = Task()  # 假设 Task 类已经实现并被正确初始化
-    
-    # 创建并启动任务
-    job = Job(name="Sync Job 1", task=task)
-    job.start()
-    
-    # 输出任务日志
-    print(job.get_logs())

@@ -82,13 +82,17 @@ class Config:
         return [Task(task) for task in self.tasks_data['tasks']]
 
     # 获取全局配置
+    def get_cookie(self):
+        """获取cookie"""
+        return self.config_data.get('cookie', None)
+    
     def get_mount_path(self):
         """获取挂载路径"""
         return self.config_data.get("mount_path", "")
 
     def get_strm_prefix(self):
-        """获取 strm 前缀"""
-        return self.config_data.get("strm_prefix", "")
+        """ 获取 strm 前缀（返回不同协议的前缀字典）"""
+        return self.config_data.get("strm_prefix", {})
 
     def get_default_task_rules_template(self):
         """获取任务默认规则模板"""

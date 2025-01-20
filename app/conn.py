@@ -5,8 +5,9 @@ import config
 class Conn:
 	# init the conn
     def __init__(self):
-        self.config = config.Config().get_config()
-        self.client = P115Client(Path("config/cookie.txt"))
+        self.config = config.Config().config_data
+        self.cookie = self.config.get('cookie')  # 获取cookie值
+        self.client = P115Client(self.cookie)
 
     # get Client
     def get_client(self):

@@ -1,3 +1,4 @@
+import json
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 from job import Job
@@ -38,17 +39,48 @@ class LogCleaner:
         self.scheduler.start()
 
     def clean(self):
-        """清理过期日志文件"""
+        """清理过期日志文件和 jobs.json 中的过期任务"""
         log_dir = 'logs/'
         now = time.time()
+        delete_jobs = set()  # 用于存储需要删除的任务名称
+
+        # 遍历日志文件夹，检查哪些文件需要被清理
         for log_file in os.listdir(log_dir):
             file_path = os.path.join(log_dir, log_file)
             if os.path.isfile(file_path):
-                # 获取文件的最后修改时间
                 file_age_days = (now - os.path.getmtime(file_path)) / (60 * 60 * 24)
                 if file_age_days > self.retention_days:
+                    # 清理过期日志文件
                     os.remove(file_path)
                     print(f"Deleted old log file: {file_path}")
+
+                    # 根据日志文件名获取任务名称，并添加到待删除的任务列表中
+                    log_filename = os.path.basename(file_path)
+                    job_name = log_filename.replace('.log', '')  # 去掉 .log 后缀
+                    delete_jobs.add(job_name)
+
+        # 一次性清理 jobs.json 中的过期任务
+        self._remove_jobs_from_json(delete_jobs)
+
+    def _remove_jobs_from_json(self, delete_jobs):
+        """根据任务名称列表删除 jobs.json 中的任务"""
+        job_file_path = 'cache/job.json'
+        if os.path.exists(job_file_path):
+            with open(job_file_path, 'r') as f:
+                job_data = json.load(f)
+
+            # 筛选出不在 delete_jobs 列表中的任务
+            job_data['jobs'] = [job for job in job_data['jobs'] if job['name'] not in delete_jobs]
+
+            # 保存更新后的 job.json
+            with open(job_file_path, 'w') as f:
+                json.dump(job_data, f, indent=4)
+
+            print(f"Removed {len(delete_jobs)} jobs from job.json.")
+
+    def stop(self):
+        """停止定时任务清理器"""
+        self.scheduler.shutdown()
 
 class SocketIOHandler(logging.Handler):
     def __init__(self, socketio, task_name):

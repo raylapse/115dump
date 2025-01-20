@@ -111,6 +111,22 @@ class Dump:
                 return rule['method']
         return 'ignore'  # 默认忽略
 
+    def _create_strm(self, file_path):
+        """ 创建 .strm 文件 """
+        # 获取协议的前缀
+        attribute = self.task.get('attribute')  # 获取任务中的 attribute 字段，决定使用哪个协议
+        strm_prefix = self.config.get_strm_prefix().get(attribute, "")  # 根据 attribute 获取对应的前缀
+        
+        if not strm_prefix:
+            print(f"Error: No strm prefix for attribute {attribute}")
+            return
+
+        strm_path = os.path.join(self.config["mount_path"], file_path + '.strm')
+        strm_url = strm_prefix + file_path
+        with open(strm_path, 'w') as f:
+            f.write(strm_url)
+        print(f"Created .strm file for: {file_path}")
+
     def _copy_file(self, file_path):
         """ 复制文件 """
         target_path = os.path.join(self.config["mount_path"], file_path)
@@ -134,15 +150,6 @@ class Dump:
 
         os.symlink(file_path, target_path)
         print(f"Created symlink for: {file_path} to {target_path}")
-
-    def _create_strm(self, file_path):
-        """ 创建 .strm 文件 """
-        strm_path = os.path.join(self.config["mount_path"], file_path + '.strm')
-        strm_prefix = self.config.get("strm_prefix", "")
-        strm_url = strm_prefix + file_path
-        with open(strm_path, 'w') as f:
-            f.write(strm_url)
-        print(f"Created .strm file for: {file_path}")
 
     def _create_virtual_file(self, file_path):
         """ 创建 0KB 虚拟文件 """

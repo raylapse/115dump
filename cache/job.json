@@ -1,22 +1,22 @@
 {
-    "tasks": [
+    "jobs": [
       {
-        "uuid": "c32d5dff-e3f7-4fbb-bc3b-4c4937a9f437",
+        "name": "c32d5dff-e3f7-4fbb-bc3b-4c4937a9f437",
         "status": "running",
-        "last_sync_time": "2025-01-18T10:30:00",
-        "next_sync_time": "2025-01-19T10:30:00",
-        "files": {
+        "start_time": "2025-01-18T10:30:00",
+        "end_time": "2025-01-19T10:30:00",
+        "result": {
           "success": 120,
           "failed": 5,
           "cleaned": 8
         }
       },
       {
-        "uuid": "12345678-abcd-1234-abcd-123456789abc",
+        "name": "12345678-abcd-1234-abcd-123456789abc",
         "status": "paused",
-        "last_sync_time": "2025-01-15T14:00:00",
-        "next_sync_time": "2025-01-16T14:00:00",
-        "files": {
+        "start_time": "2025-01-15T14:00:00",
+        "end_time": "2025-01-16T14:00:00",
+        "result": {
           "success": 100,
           "failed": 2,
           "cleaned": 6
