@@ -1,7 +1,6 @@
 {
     "tasks": [
       {
-        "uuid": "c32d5dff-e3f7-4fbb-bc3b-4c4937a9f437",
         "name": "Sample Task",
         "enable": true,
         "source_path": "/path/to/source",
@@ -10,12 +9,14 @@
           {
             "name": "Video Files",
             "extensions": ".mp4;.mkv;.avi",
-            "method": "copy"
+            "method": "copy",
+            "attribute": ""
           },
           {
             "name": "Subtitle Files",
             "extensions": ".srt;.ass",
-            "method": "symlink"
+            "method": "strm",
+            "attribute": "smb"
           }
         ],
         "enable_watch": true,
@@ -25,7 +26,6 @@
         }
       },
       {
-        "uuid": "12345678-abcd-1234-abcd-123456789abc",
         "name": "Task 2",
         "enable": false,
         "source_path": "/path/to/another/source",
@@ -34,7 +34,8 @@
           {
             "name": "Document Files",
             "extensions": ".pdf;.txt;.docx",
-            "method": "copy"
+            "method": "copy",
+            "attribute": ""
           }
         ],
         "enable_watch": false,
